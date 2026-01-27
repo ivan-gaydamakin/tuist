@@ -111,25 +111,3 @@ struct RegistrySetupCommandService {
         )
     }
 }
-             }
-           },
-           "authentication": {
-             "\(serverURL.host() ?? Constants.URLs.production.host()!)": {
-               "loginAPIPath": "/api/registry/swift/login",
-               "type": "token"
-             }
-           },
-           "registries": {
-             "[default]": {
-               "supportsAvailability": false,
--              "url": "\(serverURL.absoluteString.dropSuffix("/"))/api/registry/swift"
-+              "url": "\(registryURL)"
-             }
-           },
-           "version": 1
-         }
- 
-         """
-     }
->>>>>>> conflict 1 of 1 ends
-}
