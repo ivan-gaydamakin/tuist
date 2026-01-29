@@ -575,6 +575,8 @@ final class EmptyCacheService: CacheServicing {
                         .xcarg("CODE_SIGNING_ALLOWED", "NO"),
                         .xcarg("CODE_SIGNING_REQUIRED", "NO"),
                         .xcarg("COMPILER_INDEX_STORE_ENABLE", "NO"),
+                        .xcarg("OTHER_SWIFT_FLAGS", "$(inherited) -debug-prefix-map $(SRCROOT)=."),
+                        .xcarg("OTHER_CFLAGS", "$(inherited) -fdebug-prefix-map=$(SRCROOT)=."),
                         .configuration(configuration),
                         // To prevent the rejection when publishing on the App Store
                         // https://developer.apple.com/library/archive/qa/qa1964/_index.html
@@ -618,6 +620,8 @@ final class EmptyCacheService: CacheServicing {
                 .xcarg("CODE_SIGNING_ALLOWED", "NO"),
                 .xcarg("CODE_SIGNING_REQUIRED", "NO"),
                 .xcarg("COMPILER_INDEX_STORE_ENABLE", "NO"),
+                .xcarg("OTHER_SWIFT_FLAGS", "$(inherited) -debug-prefix-map $(SRCROOT)=."),
+                .xcarg("OTHER_CFLAGS", "$(inherited) -fdebug-prefix-map=$(SRCROOT)=."),
                 .configuration(configuration),
                 // To prevent the rejection when publishing on the App Store
                 // https://developer.apple.com/library/archive/qa/qa1964/_index.html
@@ -699,6 +703,8 @@ final class EmptyCacheService: CacheServicing {
                     .xcarg("CODE_SIGNING_ALLOWED", "NO"),
                     .xcarg("CODE_SIGNING_REQUIRED", "NO"),
                     .xcarg("COMPILER_INDEX_STORE_ENABLE", "NO"),
+                    .xcarg("OTHER_SWIFT_FLAGS", "$(inherited) -debug-prefix-map $(SRCROOT)=."),
+                    .xcarg("OTHER_CFLAGS", "$(inherited) -fdebug-prefix-map=$(SRCROOT)=."),
                     .configuration(configuration),
                 ] + (isReleaseConfiguration ? [
                     .xcarg("GCC_INSTRUMENT_PROGRAM_FLOW_ARCS", "NO"),
