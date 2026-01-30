@@ -511,10 +511,17 @@ final class EmptyCacheService: CacheServicing {
                     "\(cacheableTarget.0.target.name).xcframework",
                 ])
 
-                let xcodebuildArguments: [String] = artifactsIncludingTarget
-                    .flatMap { artifactPath in
-                        ["-framework", artifactPath.pathString]
-                    } + ["-allow-internal-distribution"]
+                var xcodebuildArguments: [String] = []
+                for artifactPath in artifactsIncludingTarget {
+                    xcodebuildArguments.append(contentsOf: ["-framework", artifactPath.pathString])
+                    let dsymPath = artifactPath.parentDirectory.appending(
+                        component: "\(artifactPath.basename).dSYM"
+                    )
+                    if try await fileSystem.exists(dsymPath) {
+                        xcodebuildArguments.append(contentsOf: ["-debug-symbols", dsymPath.pathString])
+                    }
+                }
+                xcodebuildArguments.append("-allow-internal-distribution")
 
                 Logger.current.info("Creating XCFramework for \(cacheableTarget.0.target.name)", metadata: .section)
 
@@ -575,8 +582,6 @@ final class EmptyCacheService: CacheServicing {
                         .xcarg("CODE_SIGNING_ALLOWED", "NO"),
                         .xcarg("CODE_SIGNING_REQUIRED", "NO"),
                         .xcarg("COMPILER_INDEX_STORE_ENABLE", "NO"),
-                        .xcarg("OTHER_SWIFT_FLAGS", "$(inherited) -debug-prefix-map $(SRCROOT)=."),
-                        .xcarg("OTHER_CFLAGS", "$(inherited) -fdebug-prefix-map=$(SRCROOT)=."),
                         .configuration(configuration),
                         // To prevent the rejection when publishing on the App Store
                         // https://developer.apple.com/library/archive/qa/qa1964/_index.html
@@ -585,6 +590,8 @@ final class EmptyCacheService: CacheServicing {
                         .xcarg("CLANG_ENABLE_CODE_COVERAGE", "NO"),
                     ] : []),
                     passthroughXcodeBuildArguments: [
+                        "OTHER_SWIFT_FLAGS=$(inherited) -debug-prefix-map $(SRCROOT)=/tuist-cache/$(TARGET_NAME)",
+                        "OTHER_CFLAGS=$(inherited) -fdebug-prefix-map=$(SRCROOT)=/tuist-cache/$(TARGET_NAME)",
                         "-resultBundlePath",
                         derivedDataPath.appending(component: UUID().uuidString).pathString,
                     ]
@@ -620,8 +627,6 @@ final class EmptyCacheService: CacheServicing {
                 .xcarg("CODE_SIGNING_ALLOWED", "NO"),
                 .xcarg("CODE_SIGNING_REQUIRED", "NO"),
                 .xcarg("COMPILER_INDEX_STORE_ENABLE", "NO"),
-                .xcarg("OTHER_SWIFT_FLAGS", "$(inherited) -debug-prefix-map $(SRCROOT)=."),
-                .xcarg("OTHER_CFLAGS", "$(inherited) -fdebug-prefix-map=$(SRCROOT)=."),
                 .configuration(configuration),
                 // To prevent the rejection when publishing on the App Store
                 // https://developer.apple.com/library/archive/qa/qa1964/_index.html
@@ -647,6 +652,8 @@ final class EmptyCacheService: CacheServicing {
                 clean: false,
                 arguments: deviceArguments,
                 passthroughXcodeBuildArguments: [
+                    "OTHER_SWIFT_FLAGS=$(inherited) -debug-prefix-map $(SRCROOT)=/tuist-cache/$(TARGET_NAME)",
+                    "OTHER_CFLAGS=$(inherited) -fdebug-prefix-map=$(SRCROOT)=/tuist-cache/$(TARGET_NAME)",
                     "-resultBundlePath",
                     derivedDataPath.appending(component: UUID().uuidString).pathString,
                 ]
@@ -703,14 +710,14 @@ final class EmptyCacheService: CacheServicing {
                     .xcarg("CODE_SIGNING_ALLOWED", "NO"),
                     .xcarg("CODE_SIGNING_REQUIRED", "NO"),
                     .xcarg("COMPILER_INDEX_STORE_ENABLE", "NO"),
-                    .xcarg("OTHER_SWIFT_FLAGS", "$(inherited) -debug-prefix-map $(SRCROOT)=."),
-                    .xcarg("OTHER_CFLAGS", "$(inherited) -fdebug-prefix-map=$(SRCROOT)=."),
                     .configuration(configuration),
                 ] + (isReleaseConfiguration ? [
                     .xcarg("GCC_INSTRUMENT_PROGRAM_FLOW_ARCS", "NO"),
                     .xcarg("CLANG_ENABLE_CODE_COVERAGE", "NO"),
                 ] : []),
                 passthroughXcodeBuildArguments: [
+                    "OTHER_SWIFT_FLAGS=$(inherited) -debug-prefix-map $(SRCROOT)=/tuist-cache/$(TARGET_NAME)",
+                    "OTHER_CFLAGS=$(inherited) -fdebug-prefix-map=$(SRCROOT)=/tuist-cache/$(TARGET_NAME)",
                     "-resultBundlePath",
                     derivedDataPath.appending(component: UUID().uuidString).pathString,
                 ]
