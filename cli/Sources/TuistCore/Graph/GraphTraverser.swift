@@ -502,7 +502,12 @@ public class GraphTraverser: GraphTraversing {
                 // Only embed XCFrameworks that contain .framework bundles, not .a static libraries
                 return xcframework.infoPlist.libraries.contains { $0.path.extension == "framework" }
             },
-            skip: { self.canDependencyEmbedBinaries(dependency: $0) || $0.isPrecompiledMacro || $0.isDynamicPrecompiled }
+            skip: {
+                self.canDependencyEmbedBinaries(dependency: $0) ||
+                    $0.isPrecompiledMacro ||
+                    $0.isDynamicPrecompiled ||
+                    self.isDependencyMacroTarget($0)
+            }
         )
 
         references.formUnionPreferringRequiredStatus(
@@ -1460,7 +1465,7 @@ public class GraphTraverser: GraphTraversing {
         filterDependencies(
             from: dependency,
             test: isDependencyStatic,
-            skip: or(canDependencyLinkStaticProducts, isDependencyPrecompiledMacro)
+            skip: or(or(canDependencyLinkStaticProducts, isDependencyPrecompiledMacro), isDependencyMacroTarget)
         )
     }
 
@@ -1483,6 +1488,10 @@ public class GraphTraverser: GraphTraversing {
         case .bundle, .framework, .xcframework, .library, .sdk, .target, .packageProduct:
             return false
         }
+    }
+
+    private func isDependencyMacroTarget(_ dependency: GraphDependency) -> Bool {
+        testTarget(dependency: dependency) { $0.product == .macro }
     }
 
     func isDependencyPrecompiledLibrary(dependency: GraphDependency) -> Bool {
@@ -1750,7 +1759,7 @@ public class GraphTraverser: GraphTraversing {
 
         let precompiledDependencies =
             precompiledStatic
-                .flatMap { filterDependencies(from: $0) }
+                .flatMap { filterDependencies(from: $0, skip: or(isDependencyPrecompiledMacro, isDependencyMacroTarget)) }
 
         return Set(precompiledStatic + precompiledDependencies)
             .compactMap { dependencyReference(to: $0, from: .target(name: name, path: path)) }
@@ -1770,7 +1779,12 @@ public class GraphTraverser: GraphTraversing {
                     return false
                 }
             },
-            skip: { $0.isDynamicPrecompiled || !$0.isPrecompiled || $0.isPrecompiledMacro }
+            skip: {
+                $0.isDynamicPrecompiled ||
+                    !$0.isPrecompiled ||
+                    $0.isPrecompiledMacro ||
+                    self.isDependencyMacroTarget($0)
+            }
         )
         return Set(dependencies)
             .compactMap { dependencyReference(to: $0, from: .target(name: name, path: path)) }
